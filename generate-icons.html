@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .icon-preview {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+        button {
+            background: #6aaa64;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5a9a54;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wordle PWA Icon Generator</h1>
+    <p>This tool generates PNG icons for your Wordle PWA. Click the buttons below to download the icons.</p>
+    
+    <div class="icon-preview">
+        <h3>192x192 Icon</h3>
+        <canvas id="icon192" width="192" height="192"></canvas>
+        <br>
+        <button onclick="downloadIcon('icon192', 'pwa-192x192.png')">Download 192x192</button>
+    </div>
+    
+    <div class="icon-preview">
+        <h3>512x512 Icon</h3>
+        <canvas id="icon512" width="512" height="512"></canvas>
+        <br>
+        <button onclick="downloadIcon('icon512', 'pwa-512x512.png')">Download 512x512</button>
+    </div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const tileSize = size === 192 ? 32 : 80;
+            const padding = size === 192 ? 24 : 64;
+            const fontSize = size === 192 ? 18 : 48;
+            const startY = size === 192 ? 48 : 128;
+            
+            // Background
+            ctx.fillStyle = '#6aaa64';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Rounded corners for background
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size === 192 ? 24 : 64);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Helper function to draw rounded rectangle
+            function drawRoundedRect(x, y, width, height, radius, fillStyle) {
+                ctx.fillStyle = fillStyle;
+                ctx.beginPath();
+                ctx.roundRect(x, y, width, height, radius);
+                ctx.fill();
+            }
+            
+            // Helper function to draw text
+            function drawText(text, x, y, color) {
+                ctx.fillStyle = color;
+                ctx.font = `bold ${fontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(text, x + tileSize/2, y + tileSize/2 + fontSize/3);
+            }
+            
+            // Row 1 - WORD
+            drawRoundedRect(padding, startY, tileSize, tileSize, 4, 'white');
+            drawRoundedRect(padding + tileSize + 8, startY, tileSize, tileSize, 4, 'white');
+            drawRoundedRect(padding + (tileSize + 8) * 2, startY, tileSize, tileSize, 4, 'white');
+            drawRoundedRect(padding + (tileSize + 8) * 3, startY, tileSize, tileSize, 4, 'white');
+            
+            drawText('W', padding, startY, '#333');
+            drawText('O', padding + tileSize + 8, startY, '#333');
+            drawText('R', padding + (tileSize + 8) * 2, startY, '#333');
+            drawText('D', padding + (tileSize + 8) * 3, startY, '#333');
+            
+            // Row 2 - LESS
+            drawRoundedRect(padding, startY + tileSize + 8, tileSize, tileSize, 4, '#c9b458');
+            drawRoundedRect(padding + tileSize + 8, startY + tileSize + 8, tileSize, tileSize, 4, 'white');
+            drawRoundedRect(padding + (tileSize + 8) * 2, startY + tileSize + 8, tileSize, tileSize, 4, '#6aaa64');
+            drawRoundedRect(padding + (tileSize + 8) * 3, startY + tileSize + 8, tileSize, tileSize, 4, 'white');
+            
+            drawText('L', padding, startY + tileSize + 8, 'white');
+            drawText('E', padding + tileSize + 8, startY + tileSize + 8, '#333');
+            drawText('S', padding + (tileSize + 8) * 2, startY + tileSize + 8, 'white');
+            drawText('S', padding + (tileSize + 8) * 3, startY + tileSize + 8, '#333');
+            
+            // Row 3 - PWA!!
+            drawRoundedRect(padding, startY + (tileSize + 8) * 2, tileSize, tileSize, 4, '#787c7e');
+            drawRoundedRect(padding + tileSize + 8, startY + (tileSize + 8) * 2, tileSize, tileSize, 4, '#787c7e');
+            drawRoundedRect(padding + (tileSize + 8) * 2, startY + (tileSize + 8) * 2, tileSize, tileSize, 4, '#6aaa64');
+            drawRoundedRect(padding + (tileSize + 8) * 3, startY + (tileSize + 8) * 2, tileSize, tileSize, 4, '#6aaa64');
+            
+            drawText('P', padding, startY + (tileSize + 8) * 2, 'white');
+            drawText('W', padding + tileSize + 8, startY + (tileSize + 8) * 2, 'white');
+            drawText('A', padding + (tileSize + 8) * 2, startY + (tileSize + 8) * 2, 'white');
+            drawText('!', padding + (tileSize + 8) * 3, startY + (tileSize + 8) * 2, 'white');
+        }
+        
+        function downloadIcon(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Generate icons on page load
+        window.onload = function() {
+            drawIcon(document.getElementById('icon192'), 192);
+            drawIcon(document.getElementById('icon512'), 512);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Clear+Sans:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .tile {
+    @apply w-14 h-14 border-2 border-wordle-light-gray flex items-center justify-center text-2xl font-bold uppercase;
+  }
+  
+  .tile.filled {
+    @apply border-wordle-gray text-black;
+  }
+  
+  .tile.correct {
+    @apply bg-wordle-green border-wordle-green text-white;
+  }
+  
+  .tile.present {
+    @apply bg-wordle-yellow border-wordle-yellow text-white;
+  }
+  
+  .tile.absent {
+    @apply bg-wordle-gray border-wordle-gray text-white;
+  }
+  
+  .keyboard-key {
+    @apply bg-wordle-light-gray text-black font-bold py-3 px-2 rounded cursor-pointer select-none flex items-center justify-center min-w-[40px] text-sm;
+  }
+  
+  .keyboard-key.wide {
+    @apply px-4 text-xs;
+  }
+  
+  .keyboard-key.correct {
+    @apply bg-wordle-green text-white;
+  }
+  
+  .keyboard-key.present {
+    @apply bg-wordle-yellow text-white;
+  }
+  
+  .keyboard-key.absent {
+    @apply bg-wordle-gray text-white;
+  }
+  
+  .toast {
+    @apply fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded font-medium z-50;
+    animation: toast 2s ease-in-out;
+  }
+  
+  @keyframes toast {
+    0%, 100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    10%, 90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

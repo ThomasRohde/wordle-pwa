@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle PWA - Offline</title>
+    <style>
+        body {
+            font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            padding: 2rem;
+        }
+        h1 {
+            color: #6aaa64;
+            margin-bottom: 1rem;
+        }
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #333;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        .retry-btn {
+            background: #6aaa64;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .retry-btn:hover {
+            background: #5a9a54;
+        }
+        .offline-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📱</div>
+        <h1>Wordle PWA</h1>
+        
+        <div class="offline-indicator">
+            <span>⚠️</span>
+            <span>You're currently offline</span>
+        </div>
+        
+        <p>
+            It looks like you're not connected to the internet right now. 
+            Don't worry - Wordle PWA works offline too!
+        </p>
+        
+        <p>
+            Your game progress is saved locally on your device, so you can 
+            continue playing even without an internet connection.
+        </p>
+        
+        <button class="retry-btn" onclick="window.location.reload()">
+            Try Again
+        </button>
+        
+        <p style="margin-top: 2rem; font-size: 0.9rem; color: #666;">
+            <a href="/" style="color: #6aaa64; text-decoration: none;">
+                ← Back to Game
+            </a>
+        </p>
+    </div>
+
+    <script>
+        // Check if back online
+        window.addEventListener('online', () => {
+            window.location.reload();
+        });
+        
+        // Update offline indicator
+        function updateConnectionStatus() {
+            const indicator = document.querySelector('.offline-indicator');
+            if (navigator.onLine) {
+                indicator.innerHTML = '<span>🌐</span><span>Back online!</span>';
+                indicator.style.background = '#d4edda';
+                indicator.style.borderColor = '#c3e6cb';
+                indicator.style.color = '#155724';
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        }
+        
+        setInterval(updateConnectionStatus, 1000);
+    </script>
+</body>
+</html>
