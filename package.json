@@ -13,7 +13,7 @@
   ],
   "author": "Your Name",
   "license": "MIT",
-  "homepage": "https://yourusername.github.io/wordle-pwa",
+  "homepage": "https://thomasrohde.github.io/wordle-pwa",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
