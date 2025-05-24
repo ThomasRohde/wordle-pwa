@@ -87,7 +87,8 @@ export default defineConfig({
       }
     })
   ],
-  base: process.env.NODE_ENV === 'production' ? `/${REPO_NAME}/` : '/',
+  // Use ./ for relative paths instead of absolute paths for GitHub Pages
+  base: './',
   build: {
     sourcemap: true
   },

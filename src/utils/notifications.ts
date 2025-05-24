@@ -1,13 +1,4 @@
 // Notification utilities for PWA
-export interface NotificationOptions {
-  title: string
-  body: string
-  icon?: string
-  badge?: string
-  tag?: string
-  requireInteraction?: boolean
-  actions?: NotificationAction[]
-}
 
 // Request notification permission
 export const requestNotificationPermission = async (): Promise<NotificationPermission> => {
@@ -30,7 +21,7 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
 }
 
 // Show a local notification
-export const showNotification = async (options: NotificationOptions): Promise<boolean> => {
+export const showNotification = async (title: string, body: string, icon?: string): Promise<boolean> => {
   try {
     const permission = await requestNotificationPermission()
     
@@ -43,63 +34,27 @@ export const showNotification = async (options: NotificationOptions): Promise<bo
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.ready
       if (registration) {
-        await registration.showNotification(options.title, {
-          body: options.body,
-          icon: options.icon || '/icons/pwa-192x192.png',
-          badge: options.badge || '/icons/pwa-192x192.png',
-          tag: options.tag || 'wordle-notification',
-          requireInteraction: options.requireInteraction || false,
-          actions: options.actions || []
+        await registration.showNotification(title, {
+          body,
+          icon: icon || '/icons/pwa-192x192.png',
+          badge: '/icons/pwa-192x192.png',
+          tag: 'wordle-notification',
+          requireInteraction: false
         })
         return true
       }
     }
 
     // Fallback to regular notification
-    new Notification(options.title, {
-      body: options.body,
-      icon: options.icon || '/icons/pwa-192x192.png'
+    new Notification(title, {
+      body,
+      icon: icon || '/icons/pwa-192x192.png'
     })
     
     return true
   } catch (error) {
     console.error('Failed to show notification:', error)
     return false
-  }
-}
-
-// Schedule a daily reminder notification
-export const scheduleDailyReminder = async (): Promise<void> => {
-  if (!('serviceWorker' in navigator)) {
-    return
-  }
-
-  try {
-    const registration = await navigator.serviceWorker.ready
-    
-    // Calculate time until next day at 9 AM
-    const now = new Date()
-    const tomorrow = new Date(now)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    tomorrow.setHours(9, 0, 0, 0)
-    
-    const timeUntilReminder = tomorrow.getTime() - now.getTime()
-
-    // Use setTimeout as a simple scheduler (in production, you'd use a more robust solution)
-    setTimeout(async () => {
-      await showNotification({
-        title: 'Wordle PWA',
-        body: "Don't forget to play today's word puzzle!",
-        tag: 'daily-reminder',
-        requireInteraction: false
-      })
-      
-      // Schedule the next reminder
-      scheduleDailyReminder()
-    }, timeUntilReminder)
-    
-  } catch (error) {
-    console.error('Failed to schedule daily reminder:', error)
   }
 }
 
@@ -110,12 +65,7 @@ export const showGameCompletionNotification = async (won: boolean, attempts: num
     ? `You solved today's Wordle in ${attempts} attempt${attempts === 1 ? '' : 's'}!`
     : "Don't worry, there's always tomorrow's puzzle!"
 
-  await showNotification({
-    title,
-    body,
-    tag: 'game-completion',
-    requireInteraction: false
-  })
+  await showNotification(title, body)
 }
 
 // Check if notifications are supported

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { GameState, GameStats } from '../types'
+import { GameState } from '../types'
 import { 
   getTodaysWord, 
   checkGuess, 
@@ -14,7 +14,7 @@ import {
   saveGameStats, 
   loadGameStats 
 } from '../utils/storage'
-import { showGameCompletionNotification } from '../utils/notifications'
+// import { showGameCompletionNotification } from '../utils/notifications'
 
 const INITIAL_GAME_STATE: GameState = {
   currentGuess: '',
@@ -161,7 +161,7 @@ export const useGame = () => {
 
     // Show notification for game completion
     if (isGameOver) {
-      await showGameCompletionNotification(isCorrect, newRow)
+      // await showGameCompletionNotification(isCorrect, newRow)
     }
 
     return { 

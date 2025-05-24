@@ -3,22 +3,22 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
-import { registerSW } from 'virtual:pwa-register'
 
-// Register the service worker
-const updateSW = registerSW({
-  onNeedRefresh() {
-    if (confirm('New content available, reload?')) {
-      updateSW(true)
-    }
-  },
-  onOfflineReady() {
-    console.log('App ready to work offline')
-  },
-})
+// Register the service worker for PWA functionality
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('SW registered: ', registration)
+      })
+      .catch((registrationError) => {
+        console.log('SW registration failed: ', registrationError)
+      })
+  })
+}
 
-// Get the base path for React Router
-const basename = import.meta.env.MODE === 'production' ? '/wordle-pwa/' : '/'
+// Get the base path for React Router - use relative path for GitHub Pages
+const basename = '/'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
