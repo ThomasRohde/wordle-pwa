@@ -1,54 +1,65 @@
 ---
 mode: 'agent'
-tools: ['codebase', 'run_in_terminal', 'create_file', 'replace_string_in_file']
-description: 'Scaffold a complete Progressive Web App (PWA) with React, TypeScript, and Vite'
+tools: ['workspaceTerminal', 'githubRepo', 'codebase', 'terminalLastCommand']
+description: 'Scaffold an offline‑ready Progressive Web App deployable to GitHub Pages'
+---
+# PWA App Generator
+
+**Idea:** \${input\:appIdea\:Describe your PWA idea here}
+
+Your task is to **scaffold** a new **Progressive Web App (PWA)** that can be deployed to **GitHub Pages** and works fully offline. Proceed autonomously in agent mode, but ask for missing critical information (e.g. `repoName`, `githubUser`, `appIdea`) **once** and then continue with sensible defaults.
+
+> **Key workspace variables**
+>
+> * `${workspaceFolderBasename}` – current folder name (often the repo name)
+> * `${input:repoName:${workspaceFolderBasename}}` – GitHub repository slug
+> * `${input:githubUser:your‑github‑username}` – GitHub account
+>
+> Use them consistently for paths, URLs and manifest values.
+
 ---
 
-# PWA Scaffold Generator
+## First step
 
-You are an expert PWA developer specializing in creating production-ready Progressive Web Apps. Generate a complete, installable PWA following modern best practices and mobile-first design principles.
+1. **Create or update a `TODO.md`** in the project root with all major tasks & subtasks.
+2. Keep `TODO.md` in sync – add, tick or revise items as work progresses.
 
-## Core Technologies
-- **Frontend**: React 18+ with TypeScript
-- **Build Tool**: Vite with vite-plugin-pwa
-- **Styling**: Tailwind CSS (mobile-first approach)
-- **Routing**: React Router with precached routes
-- **Storage**: Local Storage with IndexedDB fallback
-- **Deployment**: GitHub Pages with GitHub Actions
+## General requirements
 
-## Project Structure Requirements
+### 1. Project setup
 
-Organize code into a clean, scalable architecture:
-```
-src/
-├── components/     # Reusable UI components
-├── pages/         # Route components
-├── hooks/         # Custom React hooks
-├── context/       # React context providers
-├── utils/         # Utility functions
-└── types/         # TypeScript definitions
-```
+* Initialise **Vite** with **React + TypeScript**.
+* Install and configure **vite-plugin-pwa**.
+* **Vite config** tuned for GitHub Pages:
 
-## Critical PWA Configuration
-
-### 1. Vite Configuration
-```typescript
+```ts
 // vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
+
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/repo-name/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/${input:repoName}/' : '/',
   plugins: [
+    react(),
     VitePWA({
       registerType: 'prompt',
       filename: 'sw.js',
       strategies: 'generateSW',
       manifest: {
-        scope: '/repo-name/',
-        start_url: '/repo-name/',
+        scope: '/${input:repoName}/',
+        start_url: '/${input:repoName}/',
         icons: [
           {
-            src: '/repo-name/icons/pwa-192x192.png',
+            src: '/${input:repoName}/icons/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png'
+          },
+          {
+            src: '/${input:repoName}/icons/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
@@ -57,293 +68,118 @@ export default defineConfig({
 })
 ```
 
-### 2. Icon Generation
-- Create automated icon generation with canvas library
-- Generate valid PNG files (>1KB) for all required sizes
-- Use absolute paths for GitHub Pages deployment
-- Add prebuild script: `"prebuild": "node generate-icons.js"`
+* **Scripts** (`package.json`): `dev`, `build`, `prebuild` (icon generation), `deploy`.
+* Install icon tooling: `npm install --save-dev canvas`.
+* Set `"homepage": "https://${input:githubUser}.github.io/${input:repoName}"`.
 
-### 3. Service Worker Setup
-- Enable automatic registration with prompt
-- Configure Workbox for asset precaching
-- Add runtime caching for images/JSON
-- Implement offline fallback page
+### 2. PWA essentials
 
-## Mobile-First UI Requirements
+1. Generate a **`manifest.webmanifest`** with standard fields (`name`, `short_name`, etc.) and absolute icon paths (`/${input:repoName}/icons/...`).
+2. Configure **vite-plugin-pwa** to precache build assets and add runtime caching (images & JSON, stale‑while‑revalidate).
+3. Create a Service Worker extension if required:
 
-### Dynamic Viewport Handling
-Handle iOS Safari address bar changes:
-```css
-.mobile-vh {
-  min-height: 100vh;
-  min-height: calc(var(--vh, 1vh) * 100);
-  min-height: 100dvh;
-}
-```
+   * Cache dynamic JSON responses in IndexedDB.
+   * Provide an offline fallback HTML.
+   * Handle the `beforeinstallprompt` event so the UI can trigger install.
+4. Guarantee an **offline‑ready landing page** and working navigation for all critical routes.
 
-```typescript
-useEffect(() => {
-  const setVH = () => {
-    const vh = window.innerHeight * 0.01
-    document.documentElement.style.setProperty('--vh', `${vh}px`)
-  }
-  setVH()
-  window.addEventListener('resize', setVH)
-  window.addEventListener('orientationchange', () => setTimeout(setVH, 100))
-}, [])
-```
+### 3. Data persistence
 
-### iOS Safe Area Support
-```css
-body {
-  padding-bottom: env(safe-area-inset-bottom);
-  overflow-x: hidden;
-}
-```
+* Use **LocalStorage** or **IndexedDB** via a wrapper.
+* Provide a React hook that syncs state ↔ storage with debounced writes.
+* Ensure read/write works offline.
 
-### Touch Optimization
-```css
-.touch-optimized {
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-}
+### 4. State management & architecture
 
-/* Prevent iOS zoom */
-input, textarea, select {
-  font-size: 16px;
-}
-```
+* Directory layout: `components/`, `pages/`, `hooks/`, `context/`, `utils/`, `types/`.
+* Responsive UI with **Tailwind CSS**.
+* Use React Router; precache each route.
 
-## PWA Features Implementation
+### 5. Enhanced PWA features (optional)
 
-### Install Prompt
-```typescript
-export function usePWA() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isInstallable, setIsInstallable] = useState(false)
+* Stub **push notifications** module (`src/notifications.ts`).
+* Add **background sync** queue scaffold.
+* Provide Lighthouse audit script (`npm run audit`).
 
-  useEffect(() => {
-    const handler = (e: BeforeInstallPromptEvent) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
-      setIsInstallable(true)
-    }
-    window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [])
+### 6. GitHub Pages deployment
 
-  const installApp = async () => {
-    if (!deferredPrompt) return
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    console.log(`Install outcome: ${outcome}`)
-    setDeferredPrompt(null)
-    setIsInstallable(false)
-  }
+* Base path already set in Vite config (`/${input:repoName}/`).
+* Use **GitHub Actions** instead of `gh-pages`:
 
-  return { isInstallable, installApp }
-}
-```
+  * `.github/workflows/deploy.yml` builds & publishes `/dist`.
+* Add `public/.nojekyll`.
+* Ensure SW scope matches GitHub Pages path.
 
-### Offline Detection
-```typescript
-export function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
+### 7. Example feature implementation
 
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
+* Minimal UI to add/edit/delete items stored locally.
+* Install‑PWA button.
+* Online/offline toast (monitor `navigator.onLine`).
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+### 8. Documentation
 
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
+* **README.md** covering setup, dev server, PWA testing, deployment, offline behaviour.
+* Keep `TODO.md` updated.
+* **DEPLOYMENT.md** – GitHub Pages instructions.
+* **PWA\_TROUBLESHOOTING.md** – install/debug guide.
+* Document icon generation and debugging utilities.
 
-  return isOnline
-}
-```
+---
 
-### Local Storage with Debouncing
-```typescript
-export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : initialValue
-    } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error)
-      return initialValue
-    }
-  })
+## Common pitfalls & troubleshooting
 
-  const setValue = useMemo(
-    () => debounce((value: T) => {
-      try {
-        setStoredValue(value)
-        window.localStorage.setItem(key, JSON.stringify(value))
-      } catch (error) {
-        console.error(`Error setting localStorage key "${key}":`, error)
-      }
-    }, 500),
-    [key]
-  )
+### PWA install button
 
-  return [storedValue, setValue] as const
-}
-```
+* **Problem**: Works locally but disappears on GitHub Pages.
+* **Fix**: User must interact first; ensure criteria pass.
 
-## GitHub Pages Deployment
+### Icon issues
 
-### GitHub Actions Workflow
-```yaml
-name: Deploy to GitHub Pages
-on:
-  push:
-    branches: ['main']
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build
-        env:
-          NODE_ENV: production
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist'
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/deploy-pages@v4
-        id: deployment
-```
+* **Problem**: "Resource isn’t a valid image" or 404.
+* **Fix**: Icons > 1 KB; absolute paths `/repo-name/icons/*`.
 
-### Required Files
-- `public/.nojekyll` - Prevent Jekyll processing
-- `generate-icons.js` - Automated icon generation
-- Proper `package.json` scripts with prebuild step
+### Service Worker issues
 
-## Debugging & Troubleshooting
+* **Problem**: SW 404 or wrong scope on production.
+* **Fix**: Set `filename: 'sw.js'` & correct `scope`.
 
-### PWA Criteria Checker
-```typescript
+### Build & deployment
+
+* **Problem**: Assets 404 on GitHub Pages.
+* **Fix**: Correct `base` in Vite config; add `.nojekyll`.
+
+### Testing & debugging utilities
+
+Add the following toolkit to `src/utils/pwa.ts` (make globally available):
+
+```ts
 export function checkPWAInstallCriteria() {
   console.log('🔍 Checking PWA Install Criteria...')
-  
   const isHTTPS = location.protocol === 'https:'
-  console.log(`✅ HTTPS: ${isHTTPS ? 'Yes' : 'No'}`)
-  
   const hasSW = 'serviceWorker' in navigator
-  console.log(`✅ Service Worker Support: ${hasSW ? 'Yes' : 'No'}`)
-  
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-  console.log(`❗ Already Installed: ${isStandalone ? 'Yes (won\'t show prompt)' : 'No'}`)
-  
-  console.log('❗ User Engagement: Required for install prompt')
-  
+  console.log({ isHTTPS, hasSW, isStandalone })
   return { isHTTPS, hasSW, isStandalone }
 }
-
-// Make available globally for console debugging
 (window as any).checkPWAInstallCriteria = checkPWAInstallCriteria
 ```
 
-### Icon Validation
-```typescript
-export async function validateIcons() {
-  const iconSizes = ['192x192', '512x512']
-  const basePath = import.meta.env.PROD ? '/repo-name' : ''
-  
-  for (const size of iconSizes) {
-    const iconUrl = `${basePath}/icons/pwa-${size}.png`
-    try {
-      const response = await fetch(iconUrl)
-      console.log(`Icon ${size}: ${response.ok ? '✅ Valid' : '❌ Failed'} (${response.status})`)
-    } catch (error) {
-      console.log(`Icon ${size}: ❌ Error - ${error}`)
-    }
-  }
-}
-```
+---
 
-## Common Pitfalls Solutions
+## Essential file checklist
 
-1. **Install Button Issues**
-   - User must interact with site before install prompt appears
-   - Use debugging function to check PWA criteria
-   - Provide alternative install instructions
+* `.github/workflows/deploy.yml`
+* `public/.nojekyll`
+* `generate-icons.js`
+* `vite.config.ts`
+* `manifest.webmanifest`
 
-2. **Icon Problems**
-   - Generate valid PNG files >1KB using canvas library
-   - Use absolute paths in manifest for GitHub Pages
-   - Test icon validity by opening directly
+---
 
-3. **Service Worker Issues**
-   - Set explicit `filename: 'sw.js'` and `strategies: 'generateSW'`
-   - Match SW scope with GitHub Pages deployment path
-   - Include comprehensive logging
+## Workflow summary (for Copilot agent)
 
-4. **Mobile UI Problems**
-   - Implement dynamic viewport height handling
-   - Use safe area CSS variables
-   - Optimize touch interactions and prevent zoom
-
-## Package.json Scripts
-```json
-{
-  "scripts": {
-    "dev": "vite",
-    "prebuild": "node generate-icons.js",
-    "build": "tsc && vite build",
-    "generate-icons": "node generate-icons.js",
-    "audit": "npm audit && lighthouse --output=html --output-path=./lighthouse-report.html http://localhost:4173"
-  },
-  "homepage": "https://username.github.io/repo-name"
-}
-```
-
-## Dependencies
-Install these packages:
-```bash
-npm install react react-dom react-router-dom
-npm install -D @types/react @types/react-dom @vitejs/plugin-react
-npm install -D vite vite-plugin-pwa workbox-window
-npm install -D typescript tailwindcss postcss autoprefixer
-npm install -D canvas  # For icon generation
-```
-
-## Output Requirements
-
-Generate a complete, production-ready PWA with:
-- ✅ Installable with working install button
-- ✅ Offline functionality with service worker
-- ✅ Mobile-optimized UI with iOS Safari support
-- ✅ Automated icon generation
-- ✅ GitHub Pages deployment ready
-- ✅ Comprehensive debugging tools
-- ✅ TypeScript throughout
-- ✅ Modern React patterns with hooks
-- ✅ Responsive design with Tailwind CSS
-
-The final app should work perfectly on mobile devices, handle offline scenarios gracefully, and be ready for production deployment to GitHub Pages.
+1. **Plan**: Create `TODO.md`.
+2. **Generate**: Scaffolding files and directories.
+3. **Run**: Execute install & build commands in terminal.
+4. **Iterate**: Fix build errors, ask for clarifications if blocker.
+5. **Finish**: Ensure `npm run dev` starts local server; `npm run deploy` pushes to GitHub Pages and PWA installs successfully.
