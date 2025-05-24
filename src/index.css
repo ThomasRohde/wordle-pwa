@@ -34,12 +34,13 @@
   }
   
   .keyboard-key {
-    @apply bg-wordle-light-gray text-black font-bold py-2 sm:py-3 px-1.5 sm:px-2 rounded cursor-pointer select-none flex items-center justify-center min-w-[32px] sm:min-w-[40px] text-xs sm:text-sm;
+    @apply bg-wordle-light-gray text-black font-bold py-2.5 sm:py-3 px-2 sm:px-3 rounded cursor-pointer select-none flex items-center justify-center min-w-[36px] sm:min-w-[40px] text-sm sm:text-base;
     touch-action: manipulation;
+    height: 40px;
   }
   
   .keyboard-key.wide {
-    @apply px-2 sm:px-4 text-xs;
+    @apply px-3 sm:px-4 text-xs sm:text-sm min-w-[54px] sm:min-w-[64px];
   }
   
   .keyboard-key.correct {
