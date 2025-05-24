@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { GameState } from '../types'
 import { 
-  getTodaysWord,
   getRandomWord, 
   checkGuess, 
   isValidWord, 
