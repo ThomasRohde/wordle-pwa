@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { GameState } from '../types'
 import { 
-  getTodaysWord, 
+  getTodaysWord,
+  getRandomWord, 
   checkGuess, 
   isValidWord, 
   formatDate, 
@@ -21,7 +22,7 @@ const INITIAL_GAME_STATE: GameState = {
   guesses: [],
   gameStatus: 'playing',
   currentRow: 0,
-  targetWord: getTodaysWord(),
+  targetWord: getRandomWord(),
   keyboardLetters: {},
   gameNumber: 1,
   lastPlayed: formatDate(new Date()),
@@ -43,21 +44,21 @@ export const useGame = () => {
     const savedState = loadGameState()
     const savedStats = loadGameStats()
     const today = formatDate(new Date())
-    const todayWord = getTodaysWord()
+    // const todayWord = getTodaysWord() // No longer needed here
 
     if (savedState && !isNewDay(savedState.lastPlayed)) {
       // Continue existing game
       setGameState({
         ...savedState,
         stats: savedStats,
-        targetWord: todayWord // Ensure we have today's word
+        targetWord: savedState.targetWord // Continue with the saved word
       })
     } else {
       // Start new game
       const gameNumber = savedState ? savedState.gameNumber + 1 : 1
       setGameState({
         ...INITIAL_GAME_STATE,
-        targetWord: todayWord,
+        targetWord: getRandomWord(),
         gameNumber,
         lastPlayed: today,
         stats: savedStats
@@ -178,11 +179,11 @@ export const useGame = () => {
   // Reset game (for new day)
   const resetGame = useCallback(() => {
     const today = formatDate(new Date())
-    const todayWord = getTodaysWord()
+    const randomWord = getRandomWord()
     
     setGameState(prev => ({
       ...INITIAL_GAME_STATE,
-      targetWord: todayWord,
+      targetWord: randomWord,
       gameNumber: prev.gameNumber + 1,
       lastPlayed: today,
       stats: prev.stats
