@@ -14,7 +14,7 @@ export default {
         'wordle-light-gray': '#d3d6da',
       },
       fontFamily: {
-        'wordle': ['Clear Sans', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        'wordle': ['Clear Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       animation: {
         'flip': 'flip 0.6s ease-in-out',
