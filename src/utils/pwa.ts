@@ -3,12 +3,82 @@ import { PWAInstallPrompt } from '../types'
 
 let deferredPrompt: any = null
 
+// Register Service Worker with explicit scope to prevent conflicts
+export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  if (!('serviceWorker' in navigator)) {
+    console.log('Service Worker not supported');
+    return null;
+  }
+
+  try {
+    const swPath = import.meta.env.PROD ? '/wordle-pwa/sw.js' : '/sw.js';
+    const scope = import.meta.env.PROD ? '/wordle-pwa/' : '/';
+    
+    const registration = await navigator.serviceWorker.register(swPath, {
+      scope: scope  // 🔑 Critical: Match manifest scope to prevent conflicts
+    });
+    
+    console.log('✅ Service Worker registered with scope:', registration.scope);
+    console.log('📱 SW registration details:', {
+      scope: registration.scope,
+      active: !!registration.active,
+      waiting: !!registration.waiting,
+      installing: !!registration.installing
+    });
+    
+    return registration;
+  } catch (error) {
+    console.error('❌ Service Worker registration failed:', error);
+    return null;
+  }
+}
+
+// Check for conflicts with other PWAs on the same domain
+export async function checkPWAConflicts(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+  
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    console.log('🔍 Checking for PWA conflicts...');
+    console.log(`Found ${registrations.length} service worker registration(s):`);
+    
+    registrations.forEach((reg, index) => {
+      console.log(`SW ${index + 1}:`, {
+        scope: reg.scope,
+        active: !!reg.active,
+        scriptURL: reg.active?.scriptURL
+      });
+    });
+    
+    // Check for scope conflicts
+    const currentScope = import.meta.env.PROD ? '/wordle-pwa/' : '/';
+    const conflictingScopes = registrations
+      .filter(reg => reg.scope !== window.location.origin + currentScope)
+      .map(reg => reg.scope);
+    
+    if (conflictingScopes.length > 0) {
+      console.warn('⚠️  Potential PWA conflicts detected:', conflictingScopes);
+      console.warn('This may affect PWA installation. Consider using separate domains for different PWAs.');
+    } else {
+      console.log('✅ No PWA scope conflicts detected');
+    }
+  } catch (error) {
+    console.error('Error checking PWA conflicts:', error);
+  }
+}
+
 // Listen for the beforeinstallprompt event
 export const initializePWA = (): void => {
-  console.log('Initializing PWA...')
+  console.log('🔧 Initializing PWA...')
   console.log('User agent:', navigator.userAgent)
   console.log('Is HTTPS:', location.protocol === 'https:')
   console.log('Current URL:', window.location.href)
+
+  // Register service worker with explicit scoping
+  registerServiceWorker();
+  
+  // Check for conflicts with other PWAs
+  checkPWAConflicts();
 
   window.addEventListener('beforeinstallprompt', (e) => {
     console.log('beforeinstallprompt event fired!')
@@ -29,23 +99,28 @@ export const initializePWA = (): void => {
   // Check if PWA is already installed
   console.log('PWA already installed:', isPWAInstalled())
   
-  // Check service worker registration status
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready.then((registration) => {
-      console.log('Service Worker ready:', registration)
-    }).catch((error) => {
-      console.error('Service Worker registration failed:', error)
-    })
-  } else {
-    console.log('Service Worker not supported')
-  }
-
-  // Log manifest status
+  // Log manifest status with environment-aware path checking
   const manifestLink = document.querySelector('link[rel="manifest"]')
   if (manifestLink) {
-    console.log('Manifest link found:', manifestLink.getAttribute('href'))
+    const manifestPath = manifestLink.getAttribute('href');
+    console.log('📄 Manifest link found:', manifestPath)
+    
+    // Verify manifest can be loaded
+    fetch(manifestPath || '/manifest.webmanifest')
+      .then(response => response.json())
+      .then(manifest => {
+        console.log('✅ Manifest loaded successfully:', {
+          name: manifest.name,
+          scope: manifest.scope,
+          id: manifest.id,
+          start_url: manifest.start_url
+        });
+      })
+      .catch(error => {
+        console.error('❌ Manifest loading failed:', error);
+      });
   } else {
-    console.log('No manifest link found')
+    console.log('❌ No manifest link found')
   }
 }
 
@@ -185,34 +260,107 @@ export const addNetworkListeners = (onOnline: () => void, onOffline: () => void)
 
 // Debug function to check PWA installation criteria
 export const checkPWAInstallCriteria = (): void => {
-  console.group('PWA Installation Criteria Check')
+  console.group('🔍 PWA Installation Criteria Check')
   
   // Check HTTPS
-  console.log('✓ HTTPS:', location.protocol === 'https:')
+  const isHTTPS = location.protocol === 'https:' || location.hostname === 'localhost';
+  console.log('✓ HTTPS:', isHTTPS)
   
   // Check service worker
-  console.log('✓ Service Worker supported:', 'serviceWorker' in navigator)
+  const hasSW = 'serviceWorker' in navigator;
+  console.log('✓ Service Worker supported:', hasSW)
   
   // Check manifest
   const manifestLink = document.querySelector('link[rel="manifest"]')
-  console.log('✓ Manifest link:', !!manifestLink)
+  const hasManifest = !!manifestLink;
+  console.log('✓ Manifest link:', hasManifest)
   if (manifestLink) {
     console.log('  - Manifest URL:', manifestLink.getAttribute('href'))
   }
   
   // Check if already installed
-  console.log('✓ Not already installed:', !isPWAInstalled())
+  const notInstalled = !isPWAInstalled();
+  console.log('✓ Not already installed:', notInstalled)
   
   // Check beforeinstallprompt availability
-  console.log('✓ Install prompt available:', !!deferredPrompt)
+  const hasPrompt = !!deferredPrompt;
+  console.log('✓ Install prompt available:', hasPrompt)
   
   // Check user engagement (this is harder to determine)
   console.log('✓ User engagement: (requires user interaction)')
   
+  // Overall assessment
+  const canInstall = isHTTPS && hasSW && hasManifest && notInstalled;
+  console.log(`📱 Can install PWA: ${canInstall ? '✅ YES' : '❌ NO'}`);
+  
+  if (!hasPrompt && canInstall) {
+    console.warn('⚠️  Install criteria met but prompt not available. This may be due to:');
+    console.warn('   - User needs to interact with the page first');
+    console.warn('   - PWA scope conflicts with other apps on same domain');
+    console.warn('   - Browser-specific install criteria not met');
+  }
+  
   console.groupEnd()
+}
+
+// Enhanced debugging function for PWA conflicts and status
+export const debugPWAStatus = async (): Promise<void> => {
+  console.group('🛠️  PWA Status & Conflict Debug')
+  
+  // Basic PWA criteria
+  checkPWAInstallCriteria();
+  
+  // Service Worker registrations check
+  await checkPWAConflicts();
+  
+  // Manifest validation
+  try {
+    const manifestPath = import.meta.env.PROD 
+      ? '/wordle-pwa/manifest.webmanifest' 
+      : '/manifest.webmanifest';
+    const manifestResponse = await fetch(manifestPath);
+    const manifest = await manifestResponse.json();
+    console.log('📄 Manifest details:', {
+      name: manifest.name,
+      id: manifest.id,
+      scope: manifest.scope,
+      start_url: manifest.start_url,
+      display: manifest.display,
+      icons: manifest.icons?.length + ' icons'
+    });
+  } catch (error) {
+    console.error('❌ Manifest validation failed:', error);
+  }
+  
+  // Current environment info
+  console.log('🌐 Environment:', {
+    prod: import.meta.env.PROD,
+    dev: import.meta.env.DEV,
+    currentURL: window.location.href,
+    origin: window.location.origin,
+    pathname: window.location.pathname
+  });
+  
+  console.groupEnd();
+}
+
+// Make functions available globally for debugging
+declare global {
+  interface Window {
+    checkPWA: () => void;
+    debugPWA: () => Promise<void>;
+    checkPWAConflicts: () => Promise<void>;
+  }
 }
 
 // Make function available globally for debugging
 if (typeof window !== 'undefined') {
-  (window as any).checkPWAInstallCriteria = checkPWAInstallCriteria
+  window.checkPWA = checkPWAInstallCriteria;
+  window.debugPWA = debugPWAStatus;
+  window.checkPWAConflicts = checkPWAConflicts;
+  
+  console.log('🔧 PWA Debug utilities available:');
+  console.log('  - window.checkPWA() - Check install criteria');
+  console.log('  - window.debugPWA() - Full PWA status debug');
+  console.log('  - window.checkPWAConflicts() - Check for PWA conflicts');
 }

@@ -3,11 +3,13 @@ mode: 'agent'
 tools: ['workspaceTerminal', 'githubRepo', 'codebase', 'terminalLastCommand']
 description: 'Scaffold an offline‑ready Progressive Web App deployable to GitHub Pages'
 ---
-# PWA App Generator
+# PWA App Generator (Updated 2025)
 
-**Idea:** \${input\:appIdea\:Describe your PWA idea here}
+**Idea:** ${input:appIdea:Describe your PWA idea here}
 
-Your task is to **scaffold** a new **Progressive Web App (PWA)** that can be deployed to **GitHub Pages** and works fully offline. Proceed autonomously in agent mode, but ask for missing critical information (e.g. `repoName`, `githubUser`, `appIdea`) **once** and then continue with sensible defaults.
+Your task is to **scaffold** a new **Progressive Web App (PWA)** that can be deployed to **GitHub Pages** and works fully offline. Proceed autonomously in agent mode, but ask for missing critical information (e.g. `repoName`, `githubUser`, `appIdea`) **once** and then continue with sensible defaults.
+
+⚠️ **Critical**: Always use the latest versions of dependencies and handle breaking changes appropriately.
 
 > **Key workspace variables**
 >
@@ -21,16 +23,22 @@ Your task is to **scaffold** a new **Progressive Web App (PWA)** that can be dep
 
 ## First step
 
-1. **Create or update a `TODO.md`** in the project root with all major tasks & subtasks.
+1. **Create or update a `TODO.md`** in the project root with all major tasks & subtasks organized by phases.
 2. Keep `TODO.md` in sync – add, tick or revise items as work progresses.
+3. Include sections for completed tasks, in-progress work, and remaining items.
 
-## General requirements
+## Updated Requirements (Based on 2025 Implementation Experience)
 
-### 1. Project setup
+### 1. Project setup & Dependencies
 
-* Initialise **Vite** with **React + TypeScript**.
-* Install and configure **vite-plugin-pwa**.
-* **Vite config** tuned for GitHub Pages:
+* **Initialize**: `npm create vite@latest . -- --template react-ts`
+* **Core Dependencies**:
+  ```bash
+  npm install react-router-dom@7 idb qrcode
+  npm install -D vite-plugin-pwa@latest tailwindcss@4 postcss canvas gh-pages
+  ```
+* **Important**: Handle Tailwind CSS v4 breaking changes - use `@import "tailwindcss"` instead of v3 syntax
+* **Vite config** optimized for GitHub Pages with proper PWA configuration:
 
 ```ts
 // vite.config.ts
@@ -46,7 +54,29 @@ export default defineConfig({
       registerType: 'prompt',
       filename: 'sw.js',
       strategies: 'generateSW',
+      scope: '/${input:repoName}/',  // 🔑 Critical for multiple PWAs on same domain
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        navigateFallback: '/${input:repoName}/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/[^/]+$/, /^\/$/, /^\/(?!${input:repoName})/],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+            },
+          }
+        ]
+      },
       manifest: {
+        name: '${input:appIdea}',
+        short_name: '${input:repoName}',
+        id: '/${input:repoName}/',  // 🔑 Critical: Unique app ID for multiple PWAs
+        description: 'A Progressive Web App for ${input:appIdea}',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
         scope: '/${input:repoName}/',
         start_url: '/${input:repoName}/',
         icons: [
@@ -68,118 +98,625 @@ export default defineConfig({
 })
 ```
 
-* **Scripts** (`package.json`): `dev`, `build`, `prebuild` (icon generation), `deploy`.
-* Install icon tooling: `npm install --save-dev canvas`.
-* Set `"homepage": "https://${input:githubUser}.github.io/${input:repoName}"`.
+* **Package.json scripts** - ensure proper build order:
+  ```json
+  {
+    "scripts": {
+      "dev": "vite",
+      "prebuild": "node generate-icons.js",
+      "build": "tsc -b && vite build",
+      "preview": "vite preview",
+      "predeploy": "npm run build",
+      "deploy": "gh-pages -d dist"
+    },
+    "homepage": "https://${input:githubUser}.github.io/${input:repoName}"
+  }
+  ```
 
-### 2. PWA essentials
+### 2. Tailwind CSS v4 Configuration (Critical Update)
 
-1. Generate a **`manifest.webmanifest`** with standard fields (`name`, `short_name`, etc.) and absolute icon paths (`/${input:repoName}/icons/...`).
-2. Configure **vite-plugin-pwa** to precache build assets and add runtime caching (images & JSON, stale‑while‑revalidate).
-3. Create a Service Worker extension if required:
+⚠️ **Breaking Change**: Tailwind CSS v4 has different syntax requirements.
 
-   * Cache dynamic JSON responses in IndexedDB.
-   * Provide an offline fallback HTML.
-   * Handle the `beforeinstallprompt` event so the UI can trigger install.
-4. Guarantee an **offline‑ready landing page** and working navigation for all critical routes.
+**postcss.config.js**:
+```js
+export default {
+  plugins: {
+    tailwindcss: {},
+  },
+}
+```
 
-### 3. Data persistence
+**tailwind.config.js**:
+```js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50: '#f0fdf4',
+          500: '#22c55e',
+          600: '#16a34a',
+          700: '#15803d',
+        }
+      }
+    },
+  },
+  plugins: [],
+}
+```
 
-* Use **LocalStorage** or **IndexedDB** via a wrapper.
-* Provide a React hook that syncs state ↔ storage with debounced writes.
-* Ensure read/write works offline.
+**src/index.css** - Use `@import` instead of `@tailwind` directives:
+```css
+@import "tailwindcss";
 
-### 4. State management & architecture
+:root {
+  --primary-50: #f0fdf4;
+  --primary-500: #22c55e;
+  --primary-600: #16a34a;
+  --primary-700: #15803d;
+}
 
-* Directory layout: `components/`, `pages/`, `hooks/`, `context/`, `utils/`, `types/`.
-* Responsive UI with **Tailwind CSS**.
-* Use React Router; precache each route.
+/* Avoid @apply directives in v4, use CSS custom properties instead */
+```
 
-### 5. Enhanced PWA features (optional)
+### 3. React Architecture & State Management
 
-* Stub **push notifications** module (`src/notifications.ts`).
-* Add **background sync** queue scaffold.
-* Provide Lighthouse audit script (`npm run audit`).
+**Critical**: Separate React Context definition from provider to avoid Fast Refresh warnings.
 
-### 6. GitHub Pages deployment
+**Directory structure**:
+```
+src/
+├── components/      # UI components
+├── context/         # React Context (split definition/provider)
+│   ├── AppContextDefinition.ts  # Context type definitions
+│   └── AppContext.tsx           # Context provider
+├── hooks/           # Custom hooks (separated from context)
+├── pages/           # Route components
+├── types/           # TypeScript definitions
+└── utils/           # Utility functions
+```
 
-* Base path already set in Vite config (`/${input:repoName}/`).
-* Use **GitHub Actions** instead of `gh-pages`:
+**Context Pattern**:
+```ts
+// context/AppContextDefinition.ts
+import { createContext } from 'react';
+import type { AppState, AppActions } from '../types';
 
-  * `.github/workflows/deploy.yml` builds & publishes `/dist`.
-* Add `public/.nojekyll`.
-* Ensure SW scope matches GitHub Pages path.
+export const AppContext = createContext<{
+  state: AppState;
+  actions: AppActions;
+} | null>(null);
 
-### 7. Example feature implementation
+// hooks/useApp.ts
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContextDefinition';
 
-* Minimal UI to add/edit/delete items stored locally.
-* Install‑PWA button.
-* Online/offline toast (monitor `navigator.onLine`).
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within AppProvider');
+  }
+  return context;
+};
+```
 
-### 8. Documentation
+### 4. IndexedDB & Background Sync Implementation
 
-* **README.md** covering setup, dev server, PWA testing, deployment, offline behaviour.
-* Keep `TODO.md` updated.
-* **DEPLOYMENT.md** – GitHub Pages instructions.
-* **PWA\_TROUBLESHOOTING.md** – install/debug guide.
-* Document icon generation and debugging utilities.
+**Use IDB wrapper** for clean IndexedDB operations:
+```ts
+// utils/storage.ts
+import { openDB } from 'idb';
+
+export const db = openDB('app-db', 1, {
+  upgrade(db) {
+    const store = db.createObjectStore('items', {
+      keyPath: 'id',
+    });
+    store.createIndex('listId', 'listId');
+  },
+});
+```
+
+**Background Sync Queue** - Implement comprehensive sync system:
+```ts
+// utils/syncQueue.ts
+import type { SyncOperation } from '../types';
+
+export class SyncQueue {
+  private dbPromise = openDB('sync-db', 1, {
+    upgrade(db) {
+      const store = db.createObjectStore('syncQueue', {
+        keyPath: 'id',
+        autoIncrement: true
+      });
+      store.createIndex('timestamp', 'timestamp');
+    },
+  });
+
+  async addToQueue(operation: Omit<SyncOperation, 'id' | 'timestamp'>): Promise<void> {
+    // Queue operations for later sync
+  }
+
+  async processSyncQueue(): Promise<void> {
+    // Process queued operations when online
+  }
+}
+```
+
+### 5. TypeScript Types (Comprehensive)
+
+**Define complete type system**:
+```ts
+// types/index.ts
+export interface SyncOperation {
+  id?: number;
+  type: 'create' | 'update' | 'delete';
+  entityType: 'list' | 'item';
+  entityId: string;
+  data: any;
+  timestamp: number;
+}
+
+export interface PWAInstallPrompt {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+// Add all necessary interfaces for your app
+```
+
+### 6. QR Code Sharing Implementation
+
+**Install QR code library**: `npm install qrcode @types/qrcode`
+
+```ts
+// utils/qrcode.ts
+import QRCode from 'qrcode';
+
+export const generateQRCode = async (text: string): Promise<string> => {
+  try {
+    return await QRCode.toDataURL(text, {
+      errorCorrectionLevel: 'M',
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+    });
+  } catch (error) {
+    console.error('QR code generation failed:', error);
+    throw error;
+  }
+};
+```
+
+### 7. Icon Generation Script Enhancement
+
+**generate-icons.js** - Canvas-based icon generation:
+```js
+const { createCanvas } = require('canvas');
+const fs = require('fs');
+const path = require('path');
+
+function generateIcon(size) {
+  const canvas = createCanvas(size, size);
+  const ctx = canvas.getContext('2d');
+  
+  // Create gradient background
+  const gradient = ctx.createLinearGradient(0, 0, size, size);
+  gradient.addColorStop(0, '#22c55e');
+  gradient.addColorStop(1, '#16a34a');
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  
+  // Add app-specific design elements
+  // ... custom design logic
+  
+  return canvas.toBuffer('image/png');
+}
+
+// Generate icons
+const sizes = [192, 512];
+sizes.forEach(size => {
+  const buffer = generateIcon(size);
+  fs.writeFileSync(`public/icons/pwa-${size}x${size}.png`, buffer);
+  console.log(`✅ Generated ${size}x${size} icon`);
+});
+```
+
+### 8. GitHub Actions Deployment (Critical Updates)
+
+⚠️ **IMPORTANT**: Always check the actual branch name in your repository before deployment!
+
+**Step 1: Check Repository Branch**
+```bash
+git branch  # Check current branch name (often 'master' or 'main')
+```
+
+**Step 2: GitHub Actions Workflow** - Use LATEST action versions to avoid compatibility issues:
+
+**.github/workflows/deploy.yml**:
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ master ]  # ⚠️ CHANGE TO YOUR ACTUAL BRANCH NAME
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build
+      run: npm run build
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v4  # ⚠️ Use v4, not v3
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3  # ⚠️ Use v3, not v2
+      with:
+        path: './dist'
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4  # ⚠️ Use v4, not v2
+```
+
+**Step 3: GitHub Pages Repository Settings**
+1. Go to repository Settings → Pages
+2. Under "Source", select **"GitHub Actions"** (NOT "Deploy from a branch")
+3. This is crucial - the old branch-based deployment won't work with the modern workflow
+
+**Step 4: Required Files**
+- [ ] `public/.nojekyll` - Prevents Jekyll processing on GitHub Pages
+- [ ] Correct `base` path in `vite.config.ts` for your repository name
 
 ---
 
-## Common pitfalls & troubleshooting
+## Critical Deployment Lessons (Real Implementation Experience)
 
-### PWA install button
+### GitHub Actions Version Compatibility Issues
 
-* **Problem**: Works locally but disappears on GitHub Pages.
-* **Fix**: User must interact first; ensure criteria pass.
+🚨 **Problem**: Action version mismatches cause deployment failures
+- Error: "Missing download info for actions/upload-artifact@v3"
+- Error: Actions fail with incompatible dependency versions
 
-### Icon issues
+✅ **Solution**: Always use LATEST compatible versions together:
+```yaml
+# ✅ WORKING COMBINATION (2025)
+uses: actions/configure-pages@v4
+uses: actions/upload-pages-artifact@v3  
+uses: actions/deploy-pages@v4
 
-* **Problem**: "Resource isn’t a valid image" or 404.
-* **Fix**: Icons > 1 KB; absolute paths `/repo-name/icons/*`.
+# ❌ BROKEN COMBINATION (outdated)
+uses: actions/configure-pages@v3
+uses: actions/upload-pages-artifact@v2
+uses: actions/deploy-pages@v2
+```
 
-### Service Worker issues
+### Branch Name Assumption Issues
 
-* **Problem**: SW 404 or wrong scope on production.
-* **Fix**: Set `filename: 'sw.js'` & correct `scope`.
+🚨 **Problem**: Workflow triggers on wrong branch
+- Many repositories use `master` instead of `main`
+- Deployment fails silently when pushing to wrong branch
 
-### Build & deployment
+✅ **Solution**: Always verify actual branch name:
+```bash
+git branch  # Check current branch
+# Update workflow to match actual branch name
+```
 
-* **Problem**: Assets 404 on GitHub Pages.
-* **Fix**: Correct `base` in Vite config; add `.nojekyll`.
+### GitHub Pages Source Configuration
 
-### Testing & debugging utilities
+🚨 **Problem**: 404 errors even with successful builds
+- Repository settings still using legacy "Deploy from branch"
+- Pages source not configured for GitHub Actions
 
-Add the following toolkit to `src/utils/pwa.ts` (make globally available):
+✅ **Solution**: 
+1. Repository Settings → Pages
+2. Source: **"GitHub Actions"** (required for modern workflow)
+3. NOT "Deploy from a branch" (legacy method)
 
+### File Corruption During Editing
+
+🚨 **Problem**: YAML files can become corrupted during manual editing
+- Empty workflow files cause deployment failures
+- Syntax errors break the entire workflow
+
+✅ **Solution**: Always validate YAML syntax and recreate if corrupted
+
+### Multiple PWAs on Same Domain (Critical for GitHub Pages)
+
+🚨 **CRITICAL ISSUE**: Multiple PWAs deployed to same GitHub Pages domain cause installation conflicts
+
+**Problem**: When deploying multiple PWAs to the same GitHub account's GitHub Pages:
+- `username.github.io/app1/` 
+- `username.github.io/app2/`
+- `username.github.io/grocery-list/`
+
+PWA install prompts may not appear because:
+1. **Service Worker Scope Conflicts**: Service workers can interfere with each other
+2. **Browser PWA Detection**: Browsers may not distinguish between different apps on same domain
+3. **Manifest Conflicts**: Install criteria become ambiguous across multiple apps
+
+✅ **Solution**: Implement proper PWA scoping and unique identification:
+
+**1. Explicit Service Worker Scoping in vite.config.ts:**
 ```ts
-export function checkPWAInstallCriteria() {
-  console.log('🔍 Checking PWA Install Criteria...')
-  const isHTTPS = location.protocol === 'https:'
-  const hasSW = 'serviceWorker' in navigator
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-  console.log({ isHTTPS, hasSW, isStandalone })
-  return { isHTTPS, hasSW, isStandalone }
+export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/${input:repoName}/' : '/',
+  plugins: [
+    VitePWA({
+      registerType: 'prompt',
+      scope: '/${input:repoName}/',  // 🔑 Critical: Explicit scope
+      workbox: {
+        navigateFallback: '/${input:repoName}/index.html',
+        navigateFallbackDenylist: [
+          /^\/api/, 
+          /^\/[^/]+$/, 
+          /^\/$/, 
+          /^\/(?!${input:repoName})/  // 🔑 Only handle this app's routes
+        ],
+      },
+      manifest: {
+        name: 'Your App Name',
+        id: '/${input:repoName}/',     // 🔑 Critical: Unique app ID
+        scope: '/${input:repoName}/',
+        start_url: '/${input:repoName}/',
+        // Rest of manifest...
+      }
+    })
+  ]
+})
+```
+
+**2. Manual Service Worker Registration with Explicit Scope:**
+```ts
+// utils/pwa.ts
+export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  if (!('serviceWorker' in navigator)) {
+    console.log('Service Worker not supported');
+    return null;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.register(
+      '/${input:repoName}/sw.js',
+      {
+        scope: '/${input:repoName}/'  // 🔑 Critical: Match manifest scope
+      }
+    );
+    
+    console.log('SW registered with scope:', registration.scope);
+    return registration;
+  } catch (error) {
+    console.log('SW registration failed:', error);
+    return null;
+  }
 }
-(window as any).checkPWAInstallCriteria = checkPWAInstallCriteria
+```
+
+**3. Environment-Aware Manifest Path Resolution:**
+```ts
+// utils/pwa.ts
+export async function debugPWAStatus(): Promise<PWADebugResult> {
+  // Check manifest with correct path
+  try {
+    const manifestPath = import.meta.env.PROD 
+      ? '/${input:repoName}/manifest.webmanifest' 
+      : '/manifest.webmanifest';
+    const manifestResponse = await fetch(manifestPath);
+    const manifest = await manifestResponse.json();
+    console.log('Manifest loaded from:', manifestPath, manifest);
+  } catch (error) {
+    console.error('Manifest check failed:', error);
+  }
+}
+```
+
+**4. Testing Multiple PWAs:**
+- ✅ Test each PWA in separate browser profiles/incognito windows
+- ✅ Clear browser data between tests to reset PWA state
+- ✅ Verify service worker scopes don't overlap: `chrome://serviceworker-internals/`
+- ✅ Check manifest uniqueness: each app should have unique `id` and `scope`
+- ✅ Use browser dev tools Application → Manifest to verify correct loading
+
+**5. Alternative Solutions:**
+- **Option A**: Use separate GitHub accounts for different PWA projects
+- **Option B**: Deploy to different domains (Netlify, Vercel, Firebase Hosting)
+- **Option C**: Use subdomain approach with custom domain
+
+**Debugging Commands:**
+```ts
+// In browser console, check current PWA state
+console.log('Service Worker registrations:', await navigator.serviceWorker.getRegistrations());
+console.log('Current scope conflicts:', registrations.map(r => r.scope));
+
+// Check manifest loading
+fetch('/your-app/manifest.webmanifest').then(r => r.json()).then(console.log);
 ```
 
 ---
 
-## Essential file checklist
+## Updated Common Pitfalls & Solutions
 
-* `.github/workflows/deploy.yml`
-* `public/.nojekyll`
-* `generate-icons.js`
-* `vite.config.ts`
-* `manifest.webmanifest`
+### Tailwind CSS v4 Issues
+
+* **Problem**: `@apply` directives not working, build errors
+* **Fix**: Use CSS custom properties and `@import "tailwindcss"` syntax
+* **Example**: Replace `@apply bg-blue-500` with `background-color: var(--blue-500)`
+
+### React Fast Refresh Warnings
+
+* **Problem**: "Fast Refresh only works when a file only exports React components"
+* **Fix**: Separate context definition from provider, move hooks to separate files
+
+### TypeScript Integration
+
+* **Problem**: Complex type errors with React Context and PWA APIs
+* **Fix**: Comprehensive type definitions including Background Sync API globals
+
+### Background Sync Implementation
+
+* **Problem**: Sync queue not working reliably
+* **Fix**: Implement proper IndexedDB queue with retry logic and online detection
+
+### Modern Dependencies
+
+* **Problem**: Breaking changes in major version updates
+* **Fix**: Use specific version ranges and handle breaking changes:
+  - React Router v7 (breaking changes from v6)
+  - Tailwind CSS v4 (new syntax requirements)
+  - Vite 6+ (updated plugin API)
 
 ---
 
-## Workflow summary (for Copilot agent)
+## Enhanced Testing & Debugging
 
-1. **Plan**: Create `TODO.md`.
-2. **Generate**: Scaffolding files and directories.
-3. **Run**: Execute install & build commands in terminal.
-4. **Iterate**: Fix build errors, ask for clarifications if blocker.
-5. **Finish**: Ensure `npm run dev` starts local server; `npm run deploy` pushes to GitHub Pages and PWA installs successfully.
+**PWA Testing Utilities** (`src/utils/pwa.ts`):
+```ts
+export function checkPWAInstallCriteria() {
+  console.log('🔍 Checking PWA Install Criteria...')
+  const checks = {
+    isHTTPS: location.protocol === 'https:' || location.hostname === 'localhost',
+    hasSW: 'serviceWorker' in navigator,
+    hasManifest: !!document.querySelector('link[rel="manifest"]'),
+    isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+    hasValidIcons: true // Check icon sizes and formats
+  };
+  console.table(checks);
+  return checks;
+}
+
+// Make available globally for debugging
+if (typeof window !== 'undefined') {
+  (window as any).checkPWA = checkPWAInstallCriteria;
+}
+```
+
+**Development Testing Checklist**:
+- [ ] PWA installs locally (`npm run dev`)
+- [ ] Offline functionality works (Network tab → Offline)
+- [ ] Background sync queues operations
+- [ ] QR codes generate correctly
+- [ ] Production build works (`npm run build && npm run preview`)
+- [ ] All TypeScript errors resolved
+- [ ] No console errors in development
+
+**Deployment Testing Checklist**:
+- [ ] Verify repository branch name (`git branch`)
+- [ ] GitHub Actions workflow uses correct branch name
+- [ ] GitHub Actions uses latest compatible action versions
+- [ ] Repository Pages settings configured for "GitHub Actions" source
+- [ ] `.nojekyll` file exists in `public/` directory
+- [ ] Build succeeds and generates proper `dist/` folder
+- [ ] Live site accessible at `https://username.github.io/repo-name/`
+
+**Multiple PWA Deployment Testing (Critical)**:
+- [ ] Service worker scope is correctly set to `/${input:repoName}/`
+- [ ] Manifest `id` field is unique: `"id": "/${input:repoName}/"`
+- [ ] No service worker scope conflicts with other apps on same domain
+- [ ] PWA install prompt appears in fresh browser session/incognito mode
+- [ ] Test in separate browser profile if multiple PWAs exist on same domain
+- [ ] Verify `chrome://serviceworker-internals/` shows correct scope
+- [ ] Check browser DevTools → Application → Manifest loads correctly
+- [ ] Clear browser data between PWA tests to avoid conflicts
+
+---
+
+## Essential Files Checklist (Updated)
+
+### Required Configuration Files
+- [ ] `vite.config.ts` (with PWA plugin and GitHub Pages base)
+- [ ] `tailwind.config.js` (v4 compatible)
+- [ ] `postcss.config.js` (v4 plugin syntax)
+- [ ] `generate-icons.js` (canvas-based generation)
+- [ ] `.github/workflows/deploy.yml` (GitHub Actions)
+- [ ] `public/.nojekyll` (GitHub Pages compatibility)
+
+### Source Architecture
+- [ ] `src/types/index.ts` (comprehensive TypeScript definitions)
+- [ ] `src/context/AppContextDefinition.ts` (separated context)
+- [ ] `src/hooks/useApp.ts` (separated hook)
+- [ ] `src/utils/storage.ts` (IndexedDB wrapper)
+- [ ] `src/utils/syncQueue.ts` (background sync)
+- [ ] `src/utils/pwa.ts` (PWA utilities)
+- [ ] `src/utils/qrcode.ts` (QR generation)
+
+### Documentation
+- [ ] `README.md` (comprehensive usage guide)
+- [ ] `TODO.md` (progress tracking)
+- [ ] `DEPLOYMENT.md` (deployment instructions)
+- [ ] `PWA_TROUBLESHOOTING.md` (debug guide)
+
+---
+
+## Workflow Summary (Updated for 2025)
+
+1. **Plan**: Create comprehensive `TODO.md` with phased approach
+2. **Setup**: Initialize with latest Vite, handle Tailwind v4 breaking changes
+3. **Architecture**: Implement separated React Context pattern
+4. **Features**: Build core functionality with TypeScript safety
+5. **PWA**: Configure service worker, manifest, and background sync
+6. **Storage**: Implement IndexedDB with sync queue
+7. **UI**: Build responsive interface with Tailwind v4
+8. **Testing**: Validate PWA criteria and offline functionality
+9. **Build**: Ensure production build works with proper base paths
+10. **Deploy**: Use GitHub Actions for automatic deployment
+    - **Critical**: Verify branch name matches workflow trigger
+    - **Critical**: Use latest GitHub Actions versions (v4/v3 not v2/v3)
+    - **Critical**: Configure Pages source to "GitHub Actions" in repo settings
+
+**Success Criteria**:
+- ✅ `npm run dev` starts without errors
+- ✅ `npm run build` generates PWA-compliant assets
+- ✅ App installs as PWA locally and in production
+- ✅ Offline functionality works completely
+- ✅ Background sync queues and processes operations
+- ✅ All TypeScript errors resolved
+- ✅ GitHub Actions deployment succeeds
+- ✅ Production deployment accessible at live URL
+
+---
+
+**Key Lessons from Implementation**:
+- Always handle major version breaking changes early
+- Separate React Context architecture prevents Fast Refresh issues
+- Comprehensive TypeScript types save debugging time later
+- Background sync requires careful IndexedDB queue management
+- Modern CSS frameworks require updated syntax patterns
+- **Production PWA testing is essential before deployment**
+- **GitHub Actions versions must be compatible - always use latest**
+- **Branch names vary by repository - never assume 'main' vs 'master'**
+- **GitHub Pages source configuration is critical for modern workflows**
+- **YAML file corruption can break entire deployment pipeline**
+- **Multiple PWAs on same domain REQUIRE explicit scoping and unique IDs to avoid install conflicts**

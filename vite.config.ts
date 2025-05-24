@@ -14,9 +14,11 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'icons/*.png', 'icons/*.svg', 'apple-touch-icon.png', 'safari-pinned-tab.svg'],
       filename: 'sw.js',
       strategies: 'generateSW',
+      scope: '/wordle-pwa/',  // 🔑 Critical: Explicit scope for service worker
       manifest: {
         name: 'Wordle PWA',
         short_name: 'Wordle',
+        id: '/wordle-pwa/',  // 🔑 Critical: Unique app ID for multiple PWAs
         description: 'A Progressive Web App clone of the popular Wordle game with offline support',
         theme_color: '#6aaa64',
         background_color: '#ffffff',
@@ -45,6 +47,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        navigateFallback: '/wordle-pwa/index.html',
+        navigateFallbackDenylist: [
+          /^\/api/, 
+          /^\/[^/]+$/, 
+          /^\/$/, 
+          /^\/(?!wordle-pwa)/  // 🔑 Only handle this app's routes, prevent conflicts
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
