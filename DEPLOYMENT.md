@@ -35,6 +35,8 @@ The following issues were resolved:
 2. **Service Worker**: Explicitly configured VitePWA to generate `sw.js` 
 3. **Jekyll conflicts**: Added `.nojekyll` file to prevent GitHub Pages Jekyll processing
 4. **GitHub Actions**: Added automated deployment workflow
+5. **Invalid icons**: Generated proper PNG icons automatically during build process
+6. **Build process**: Added prebuild script to ensure icons are always generated
 
 ## Troubleshooting
 
@@ -50,4 +52,6 @@ If you still see 404 errors after deployment:
 - `.github/workflows/deploy.yml` - Added GitHub Actions workflow
 - `vite.config.ts` - Fixed icon paths and PWA configuration  
 - `public/.nojekyll` - Prevents Jekyll processing
-- `package.json` - Updated homepage URL
+- `package.json` - Updated homepage URL and added icon generation script
+- `generate-icons.js` - Automated PNG icon generation with proper Wordle-themed design
+- `public/icons/pwa-*.png` - Generated valid PWA icons

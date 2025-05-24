@@ -11,7 +11,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'safari-pinned-tab.svg'],
+      includeAssets: ['favicon.ico', 'icons/*.png', 'icons/*.svg', 'apple-touch-icon.png', 'safari-pinned-tab.svg'],
       filename: 'sw.js',
       strategies: 'generateSW',
       manifest: {
@@ -26,17 +26,17 @@ export default defineConfig({
         start_url: '/wordle-pwa/',
         icons: [
           {
-            src: '/wordle-pwa/icons/pwa-192x192.png',
+            src: 'icons/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/wordle-pwa/icons/pwa-512x512.png',
+            src: 'icons/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: '/wordle-pwa/icons/pwa-512x512.png',
+            src: 'icons/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
