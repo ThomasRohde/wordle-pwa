@@ -9,7 +9,8 @@ export const Header: React.FC = () => {
     showToast, 
     canInstall, 
     install, 
-    networkStatus 
+    networkStatus,
+    resetGame 
   } = useGameContext()
   const [showStats, setShowStats] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
@@ -71,6 +72,15 @@ export const Header: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={resetGame}
+            className="p-2 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+            type="button"
+            aria-label="New Game"
+          >
+            🔄 New Game
+          </button>
+
           {canInstall && (
             <button
               onClick={handleInstall}
