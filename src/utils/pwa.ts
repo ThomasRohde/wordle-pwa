@@ -5,7 +5,13 @@ let deferredPrompt: any = null
 
 // Listen for the beforeinstallprompt event
 export const initializePWA = (): void => {
+  console.log('Initializing PWA...')
+  console.log('User agent:', navigator.userAgent)
+  console.log('Is HTTPS:', location.protocol === 'https:')
+  console.log('Current URL:', window.location.href)
+
   window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('beforeinstallprompt event fired!')
     // Prevent the mini-infobar from appearing on mobile
     e.preventDefault()
     // Stash the event so it can be triggered later
@@ -19,6 +25,28 @@ export const initializePWA = (): void => {
     console.log('PWA was installed')
     deferredPrompt = null
   })
+
+  // Check if PWA is already installed
+  console.log('PWA already installed:', isPWAInstalled())
+  
+  // Check service worker registration status
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then((registration) => {
+      console.log('Service Worker ready:', registration)
+    }).catch((error) => {
+      console.error('Service Worker registration failed:', error)
+    })
+  } else {
+    console.log('Service Worker not supported')
+  }
+
+  // Log manifest status
+  const manifestLink = document.querySelector('link[rel="manifest"]')
+  if (manifestLink) {
+    console.log('Manifest link found:', manifestLink.getAttribute('href'))
+  } else {
+    console.log('No manifest link found')
+  }
 }
 
 // Check if the app can be installed
@@ -153,4 +181,38 @@ export const addNetworkListeners = (onOnline: () => void, onOffline: () => void)
     window.removeEventListener('online', handleOnline)
     window.removeEventListener('offline', handleOffline)
   }
+}
+
+// Debug function to check PWA installation criteria
+export const checkPWAInstallCriteria = (): void => {
+  console.group('PWA Installation Criteria Check')
+  
+  // Check HTTPS
+  console.log('✓ HTTPS:', location.protocol === 'https:')
+  
+  // Check service worker
+  console.log('✓ Service Worker supported:', 'serviceWorker' in navigator)
+  
+  // Check manifest
+  const manifestLink = document.querySelector('link[rel="manifest"]')
+  console.log('✓ Manifest link:', !!manifestLink)
+  if (manifestLink) {
+    console.log('  - Manifest URL:', manifestLink.getAttribute('href'))
+  }
+  
+  // Check if already installed
+  console.log('✓ Not already installed:', !isPWAInstalled())
+  
+  // Check beforeinstallprompt availability
+  console.log('✓ Install prompt available:', !!deferredPrompt)
+  
+  // Check user engagement (this is harder to determine)
+  console.log('✓ User engagement: (requires user interaction)')
+  
+  console.groupEnd()
+}
+
+// Make function available globally for debugging
+if (typeof window !== 'undefined') {
+  (window as any).checkPWAInstallCriteria = checkPWAInstallCriteria
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useGameContext } from '../context/GameContext'
 import { shareGame } from '../utils/pwa'
+import { InstallPrompt } from './InstallPrompt'
 
 export const Header: React.FC = () => {
   const { 
@@ -14,6 +15,7 @@ export const Header: React.FC = () => {
   } = useGameContext()
   const [showStats, setShowStats] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false)
 
   const handleShare = async () => {
     const shareText = getGameShareText()
@@ -33,6 +35,10 @@ export const Header: React.FC = () => {
     } else {
       showToast('Failed to install app', 'error')
     }
+  }
+
+  const handleManualInstall = () => {
+    setShowInstallPrompt(true)
   }
 
   const getGameStatusText = () => {
@@ -82,11 +88,21 @@ export const Header: React.FC = () => {
             <span className="hidden sm:inline">🔄 New Game</span>
           </button>
 
-          {canInstall && (
+          {canInstall ? (
             <button
               onClick={handleInstall}
               className="p-1.5 sm:p-2 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600 whitespace-nowrap"
               type="button"
+            >
+              <span className="sm:hidden">📱</span>
+              <span className="hidden sm:inline">📱 Install</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleManualInstall}
+              className="p-1.5 sm:p-2 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600 whitespace-nowrap"
+              type="button"
+              title="Show install instructions"
             >
               <span className="sm:hidden">📱</span>
               <span className="hidden sm:inline">📱 Install</span>
@@ -234,6 +250,10 @@ export const Header: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showInstallPrompt && (
+        <InstallPrompt onClose={() => setShowInstallPrompt(false)} />
       )}
     </>
   )

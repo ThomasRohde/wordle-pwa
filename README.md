@@ -149,6 +149,35 @@ Generate PWA icons using the included `generate-icons.html`:
 2. Download the generated 192x192 and 512x512 PNG files
 3. Replace the placeholder files in `public/icons/`
 
+## 🔧 Troubleshooting
+
+### Install Button Not Visible on GitHub Pages
+
+If the PWA install button works in development but disappears on GitHub Pages:
+
+1. **Check Browser Console** - Look for PWA-related errors
+2. **Verify Icon Paths** - Icons must use absolute paths for GitHub Pages
+3. **Test Icon Validity** - Visit icon URLs directly to ensure they load
+4. **Check Service Worker** - DevTools > Application > Service Workers
+5. **Use Debug Function** - In browser console, run `checkPWAInstallCriteria()`
+
+See `PWA_TROUBLESHOOTING.md` for detailed debugging steps.
+
+### Common Issues
+
+- **Icons not loading**: Ensure icons are valid PNG files >1KB
+- **Service Worker errors**: Check console for registration failures  
+- **Manifest issues**: Use DevTools > Application > Manifest tab
+- **Already installed**: PWA install prompt won't show if already installed
+- **Browser support**: Some browsers have stricter PWA requirements
+
+### Manual Installation
+
+If automatic install doesn't work, users can install manually:
+- **Desktop**: Look for install icon in address bar or browser menu
+- **iOS**: Share button → "Add to Home Screen"
+- **Android**: Menu → "Add to Home Screen" or "Install App"
+
 ## 🎮 How to Play
 
 1. **Guess the word** - Enter a 5-letter word
