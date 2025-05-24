@@ -1,36 +1,6 @@
 # PWA App Generator. 
 
-**PWA Essentials**
-    - Generate a **`manifest.webma4. **State Management & Architecture**
-    - Organize code into `components`, `pages`, `hooks`, `context`, `utils`, and `types`.
-    - Keep components modular and responsive using **Tailwind CSS** (mobile-first).
-    - Use React Router for navigation; ensure each route's resources are precached.
-    - **CRITICAL Mobile UI Requirements**:
-        - **Dynamic Viewport Height**: Handle iOS Safari address bar changes with CSS custom properties and JavaScript
-        - **Safe Area Support**: Use `env(safe-area-inset-bottom)` for iOS notch/home indicator
-        - **Touch Optimization**: Prevent zoom, callouts, and optimize tap responses
-        - **Keyboard Handling**: Prevent iOS keyboard zoom and optimize virtual keyboard experience
-        - **Responsive Typography**: Scale font sizes appropriately across screen sizes
-        - **iOS-Specific Fixes**: Handle Safari's unique viewport and keyboard behaviorsst`** with name, short_name, description, theme_color, background_color, display mode `standalone`, start_url matching base path, and a full icon set (192 px & 512 px PNGs plus maskable).    - **CRITICAL PWA Icon Requirements**:
-        - Generate **VALID PNG files** (not placeholder/empty files) - browsers will show 404 errors for invalid images even if files exist
-        - Use automated icon generation with canvas/node libraries to ensure consistency
-        - Add `prebuild` script to generate icons before every build: `"prebuild": "node generate-icons.js"`
-        - Icon paths in manifest must be absolute for GitHub Pages: `/repo-name/icons/icon.png`
-        - Test icon validity: files should be >1KB and display properly when opened directly
-        - **DEBUGGING**: Add comprehensive logging to PWA utils to track `beforeinstallprompt` event
-        - **USER ENGAGEMENT**: Install prompt requires user interaction - ensure app is used before testing install    - Configure **vite-plugin-pwa** to:
-        - Register the Service Worker automatically (`registerType: "prompt"`).
-        - Use explicit configuration: `filename: 'sw.js'` and `strategies: 'generateSW'`
-        - Use **Workbox** defaults for precaching build assets.
-        - Add runtime caching for same-origin images and JSON using a stale-while-revalidate strategy.
-        - Set proper scope and start_url for subfolder deployment: `scope: '/repo-name/'`
-        - **CRITICAL**: Ensure Service Worker scope matches GitHub Pages deployment path    - Create a custom **Service Worker** extension (if needed) to:
-        - Cache API responses or dynamic JSON in IndexedDB when offline.
-        - Show an "offline fallback page" for navigation requests.
-        - Listen for the `beforeinstallprompt` event and expose a UI button to trigger install.
-        - **DEBUGGING**: Include comprehensive logging and PWA criteria checking function
-        - **FALLBACK**: Provide alternative installation instructions for manual install
-    - Provide an **offline-ready** landing page and ensure all critical routes work without network.ect Idea:** `<insert your app idea here>`
+Provide an **offline-ready** landing page and ensure all critical routes work without network.ect Idea:** `<insert your app idea here>`
 
 **Task:** Scaffold a new **Progressive Web App (PWA)** that is fully static, stores data in browser storage, and can be deployed to GitHub Pages. Follow these guidelines:
 
