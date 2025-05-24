@@ -4,21 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
 
-// Register the service worker for PWA functionality
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration)
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError)
-      })
-  })
-}
-
-// Get the base path for React Router - use relative path for GitHub Pages
-const basename = '/'
+// Get the base path for React Router
+const basename = import.meta.env.MODE === 'production' ? '/wordle-pwa/' : '/'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

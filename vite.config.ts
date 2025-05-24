@@ -20,8 +20,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: './',
-        start_url: './',
+        scope: '/wordle-pwa/',
+        start_url: '/wordle-pwa/',
         icons: [
           {
             src: 'icons/pwa-192x192.png',
@@ -87,8 +87,8 @@ export default defineConfig({
       }
     })
   ],
-  // Use ./ for relative paths instead of absolute paths for GitHub Pages
-  base: './',
+  // Use the repository name as base path for GitHub Pages
+  base: process.env.NODE_ENV === 'production' ? '/wordle-pwa/' : '/',
   build: {
     sourcemap: true
   },
