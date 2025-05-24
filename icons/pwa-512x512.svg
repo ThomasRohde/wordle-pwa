@@ -1,0 +1,45 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#6aaa64"/>
+  
+  <!-- Grid of tiles representing Wordle game -->
+  <!-- Row 1 -->
+  <rect x="64" y="128" width="80" height="80" rx="8" fill="white"/>
+  <rect x="152" y="128" width="80" height="80" rx="8" fill="white"/>
+  <rect x="240" y="128" width="80" height="80" rx="8" fill="white"/>
+  <rect x="328" y="128" width="80" height="80" rx="8" fill="white"/>
+  <rect x="416" y="128" width="80" height="80" rx="8" fill="white" fill-opacity="0.3"/>
+  
+  <!-- Row 2 -->
+  <rect x="64" y="216" width="80" height="80" rx="8" fill="#c9b458"/>
+  <rect x="152" y="216" width="80" height="80" rx="8" fill="white"/>
+  <rect x="240" y="216" width="80" height="80" rx="8" fill="#6aaa64"/>
+  <rect x="328" y="216" width="80" height="80" rx="8" fill="white"/>
+  <rect x="416" y="216" width="80" height="80" rx="8" fill="white" fill-opacity="0.3"/>
+  
+  <!-- Row 3 -->
+  <rect x="64" y="304" width="80" height="80" rx="8" fill="#787c7e"/>
+  <rect x="152" y="304" width="80" height="80" rx="8" fill="#787c7e"/>
+  <rect x="240" y="304" width="80" height="80" rx="8" fill="#6aaa64"/>
+  <rect x="328" y="304" width="80" height="80" rx="8" fill="#6aaa64"/>
+  <rect x="416" y="304" width="80" height="80" rx="8" fill="#6aaa64"/>
+  
+  <!-- Letters -->
+  <!-- Row 1 -->
+  <text x="104" y="180" fill="#333" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">W</text>
+  <text x="192" y="180" fill="#333" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">O</text>
+  <text x="280" y="180" fill="#333" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">R</text>
+  <text x="368" y="180" fill="#333" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">D</text>
+  
+  <!-- Row 2 -->
+  <text x="104" y="268" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">L</text>
+  <text x="192" y="268" fill="#333" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">E</text>
+  <text x="280" y="268" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">S</text>
+  <text x="368" y="268" fill="#333" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">S</text>
+  
+  <!-- Row 3 -->
+  <text x="104" y="356" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">P</text>
+  <text x="192" y="356" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">W</text>
+  <text x="280" y="356" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">A</text>
+  <text x="368" y="356" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">!</text>
+  <text x="456" y="356" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle">!</text>
+</svg>
