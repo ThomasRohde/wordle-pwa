@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Header } from '../components/Header'
 import { GameBoard } from '../components/GameBoard'
 import { Keyboard } from '../components/Keyboard'
@@ -15,6 +15,29 @@ export const Game: React.FC = () => {
     submitGuess, 
     showToast 
   } = useGameContext()
+
+  // Handle dynamic viewport height for mobile
+  useEffect(() => {
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01
+      document.documentElement.style.setProperty('--vh', `${vh}px`)
+    }
+
+    // Set initial value
+    setVH()
+
+    // Update on resize and orientation change
+    window.addEventListener('resize', setVH)
+    window.addEventListener('orientationchange', () => {
+      // Delay to ensure orientation change is complete
+      setTimeout(setVH, 100)
+    })
+
+    return () => {
+      window.removeEventListener('resize', setVH)
+      window.removeEventListener('orientationchange', setVH)
+    }
+  }, [])
 
   // Handle keyboard input
   useKeyboard({
@@ -43,12 +66,16 @@ export const Game: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="mobile-vh bg-white flex flex-col ios-keyboard-fix">
       <Header />
       
-      <main className="flex-1 flex flex-col justify-between max-w-md mx-auto w-full">
-        <GameBoard />
-        <Keyboard />
+      <main className="flex-1 flex flex-col justify-between max-w-md mx-auto w-full px-2 mobile-safe">
+        <div className="flex-1 flex items-center justify-center">
+          <GameBoard />
+        </div>
+        <div className="flex-shrink-0 keyboard-container">
+          <Keyboard />
+        </div>
       </main>
       
       <Toast />

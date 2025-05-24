@@ -70,9 +70,9 @@ export const Keyboard: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-4 mt-2 sm:mt-4">
+    <div className="flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-4 w-full touch-optimized">
       {KEYBOARD_ROWS.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex gap-1 sm:gap-1.5">
+        <div key={rowIndex} className="flex gap-1 sm:gap-1.5 justify-center w-full">
           {row.map((key) => (
             <Key
               key={key}

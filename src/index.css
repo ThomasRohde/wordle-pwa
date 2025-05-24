@@ -5,10 +5,83 @@
 @tailwind utilities;
 
 @layer base {
+  ::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Mobile viewport and keyboard optimization */
+@layer utilities {
+  .mobile-vh {
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+    min-height: 100dvh; /* Dynamic viewport height when supported */
+  }
+  
+  .mobile-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Prevent keyboard zoom on iOS */
+  input[type="text"], 
+  input[type="number"], 
+  textarea, 
+  select {
+    font-size: 16px;
+  }
+  
+  /* Optimize for mobile touches */
+  .touch-optimized {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* iOS specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  .ios-keyboard-fix {
+    height: 100vh;
+    height: 100dvh;
+  }
+  
+  /* Add extra bottom padding on iOS for keyboard area */
+  .keyboard-container {
+    padding-bottom: max(env(safe-area-inset-bottom), 8px);
+  }
+  
+  /* Prevent iOS Safari from zooming when focusing inputs */
+  @media screen and (max-width: 767px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+    
+    /* Additional keyboard optimization for iPhone */
+    .keyboard-key {
+      font-size: 14px !important;
+      min-height: 40px;
+    }
+  }
+}ot {
+    /* Custom properties for dynamic viewport units */
+    --vh: 1vh;
+  }
+  
   body {
     font-family: 'Clear Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal scrolling on mobile */
+    overflow-x: hidden;
+    /* Handle iOS Safari bottom bar */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Improve mobile scrolling */
+  html {
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
   }
 }
 
@@ -37,6 +110,17 @@
     @apply bg-wordle-light-gray text-black font-bold py-2.5 sm:py-3 px-2 sm:px-3 rounded cursor-pointer select-none flex items-center justify-center min-w-[36px] sm:min-w-[40px] text-sm sm:text-base;
     touch-action: manipulation;
     height: 40px;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    /* Prevent iOS keyboard zoom */
+    font-size: 14px;
+  }
+  
+  @media (min-width: 640px) {
+    .keyboard-key {
+      font-size: 16px;
+    }
   }
   
   .keyboard-key.wide {
