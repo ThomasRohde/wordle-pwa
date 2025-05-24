@@ -26,8 +26,8 @@ export const GameBoard: React.FC = () => {
   })
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <div className="grid gap-2">
+    <div className="flex flex-col items-center justify-center p-2 sm:p-4">
+      <div className="grid gap-1 sm:gap-2">
         {rows}
       </div>
     </div>

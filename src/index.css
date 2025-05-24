@@ -14,7 +14,7 @@
 
 @layer components {
   .tile {
-    @apply w-14 h-14 border-2 border-wordle-light-gray flex items-center justify-center text-2xl font-bold uppercase;
+    @apply w-12 h-12 sm:w-14 sm:h-14 border-2 border-wordle-light-gray flex items-center justify-center text-xl sm:text-2xl font-bold uppercase;
   }
   
   .tile.filled {
@@ -34,11 +34,12 @@
   }
   
   .keyboard-key {
-    @apply bg-wordle-light-gray text-black font-bold py-3 px-2 rounded cursor-pointer select-none flex items-center justify-center min-w-[40px] text-sm;
+    @apply bg-wordle-light-gray text-black font-bold py-2 sm:py-3 px-1.5 sm:px-2 rounded cursor-pointer select-none flex items-center justify-center min-w-[32px] sm:min-w-[40px] text-xs sm:text-sm;
+    touch-action: manipulation;
   }
   
   .keyboard-key.wide {
-    @apply px-4 text-xs;
+    @apply px-2 sm:px-4 text-xs;
   }
   
   .keyboard-key.correct {
@@ -57,10 +58,23 @@
     @apply fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded font-medium z-50;
     animation: toast 2s ease-in-out;
   }
+
+  .toast-mobile {
+    @apply w-full text-white px-3 py-2 rounded-lg font-medium shadow-lg cursor-pointer;
+    @apply text-sm leading-tight text-center;
+    animation: toast-mobile 3s ease-in-out;
+    word-wrap: break-word;
+    hyphens: auto;
+  }
   
   @keyframes toast {
     0%, 100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
     10%, 90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  @keyframes toast-mobile {
+    0%, 100% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    8%, 92% { opacity: 1; transform: translateY(0) scale(1); }
   }
 }
 

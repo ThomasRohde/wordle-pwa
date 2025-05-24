@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       colors: {
         'wordle-green': '#6aaa64',
         'wordle-yellow': '#c9b458',
